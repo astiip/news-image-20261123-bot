@@ -1,23 +1,32 @@
-#!/usr/bin/env python3
-"""Entry program for news-image-20261123.
+"""Copy the finished news-image entry into the harness output folder.
 
-The page is pre-rendered by render.py (PIL, run at build time) into
-entry.png at the repository root. This program only copies that image to
-the grader's output directory, so both grader runs produce identical
-bytes. Standard library only — nothing is installed.
+The artwork itself is baked into entry.png at the repository root. This
+script's only job is to place an exact duplicate of that file where the
+harness expects it, creating the destination folder when needed.
 """
+
 import os
 import shutil
+from pathlib import Path
 
 
-# The copy is byte-for-byte, so the two grader runs see the same image.
-def main():
-    out_dir = os.environ.get("MAKEFUN_OUTPUT_DIR", "/output")
-    here = os.path.dirname(os.path.abspath(__file__))
-    src = os.path.join(here, "entry.png")
-    os.makedirs(out_dir, exist_ok=True)
-    shutil.copyfile(src, os.path.join(out_dir, "entry.png"))
-    print("copied entry.png to %s" % out_dir)
+def locate_entry() -> Path:
+    """Return the entry image next to this script, wherever we run from."""
+    return Path(__file__).resolve().parent / "entry.png"
+
+
+def destination_folder() -> Path:
+    """Read the harness output folder, falling back to /output."""
+    return Path(os.environ.get("MAKEFUN_OUTPUT_DIR") or "/output")
+
+
+def main() -> None:
+    source = locate_entry()
+    target_dir = destination_folder()
+    target_dir.mkdir(parents=True, exist_ok=True)
+    target = target_dir / source.name
+    shutil.copyfile(source, target)
+    print(f"Entry image copied to {target}")
 
 
 if __name__ == "__main__":
